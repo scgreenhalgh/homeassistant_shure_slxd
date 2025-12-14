@@ -4,7 +4,7 @@
   "codeowners": [],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/seangreenhalgh/homeassistant_sennheiser_slxd",
+  "documentation": "https://github.com/scgreenhalgh/homeassistant_shure_slxd",
   "iot_class": "local_polling",
   "requirements": [],
   "version": "0.1.0"

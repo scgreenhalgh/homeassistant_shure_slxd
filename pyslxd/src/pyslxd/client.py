@@ -205,6 +205,43 @@ class SlxdClient:
         response = await self.send_command(command)
         return response.value or ""
 
+    async def get_rf_band(self) -> str:
+        """Get RF frequency band.
+
+        Returns:
+            RF band string (e.g., "G55", "H55", "J52")
+        """
+        command = build_command(CommandType.GET, "RF_BAND")
+        response = await self.send_command(command)
+        return response.value or ""
+
+    async def get_lock_status(self) -> str:
+        """Get front panel lock status.
+
+        Returns:
+            Lock status string ("OFF", "MENU", or "ALL")
+        """
+        command = build_command(CommandType.GET, "LOCK_STATUS")
+        response = await self.send_command(command)
+        return response.value or "OFF"
+
+    async def get_group_channel(self, channel: int) -> str:
+        """Get group/channel preset for channel.
+
+        Args:
+            channel: Channel number (1-4)
+
+        Returns:
+            Group/channel string (e.g., "1,1")
+
+        Raises:
+            ValueError: If channel is out of range
+        """
+        self._validate_channel(channel)
+        command = build_command(CommandType.GET, "GROUP_CHAN", channel=channel)
+        response = await self.send_command(command)
+        return response.value or ""
+
     async def get_audio_gain(self, channel: int) -> int:
         """Get audio gain for channel in dB.
 

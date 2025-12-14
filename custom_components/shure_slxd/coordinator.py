@@ -69,6 +69,12 @@ class SlxdDataUpdateCoordinator(DataUpdateCoordinator[SlxdDevice]):
             model = await client.get_model()
             device_id = await client.get_device_id()
             firmware_version = await client.get_firmware_version()
+            rf_band = await client.get_rf_band()
+            lock_status_str = await client.get_lock_status()
+            try:
+                lock_status = LockStatus(lock_status_str)
+            except ValueError:
+                lock_status = LockStatus.OFF
 
             # Determine channel count based on model
             if "Q" in model:
@@ -85,10 +91,18 @@ class SlxdDataUpdateCoordinator(DataUpdateCoordinator[SlxdDevice]):
                 gain_db = await client.get_audio_gain(ch_num)
                 frequency_khz = await client.get_frequency(ch_num)
                 channel_name = await client.get_channel_name(ch_num)
+                group_channel = await client.get_group_channel(ch_num)
+                audio_out_level_str = await client.get_audio_out_level(ch_num)
                 audio_peak = await client.get_audio_level_peak(ch_num)
                 audio_rms = await client.get_audio_level_rms(ch_num)
                 rssi_1 = await client.get_rssi(ch_num, antenna=1)
                 rssi_2 = await client.get_rssi(ch_num, antenna=2)
+
+                # Parse audio output level
+                try:
+                    audio_out_level = AudioOutputLevel(audio_out_level_str)
+                except ValueError:
+                    audio_out_level = AudioOutputLevel.MIC
 
                 # Fetch transmitter info
                 tx_model_str = await client.get_tx_model(ch_num)
@@ -112,9 +126,9 @@ class SlxdDataUpdateCoordinator(DataUpdateCoordinator[SlxdDevice]):
                     number=ch_num,
                     name=channel_name or f"Channel {ch_num}",
                     frequency_khz=frequency_khz,
-                    group_channel="",
+                    group_channel=group_channel,
                     audio_gain_db=gain_db,
-                    audio_out_level=AudioOutputLevel.MIC,
+                    audio_out_level=audio_out_level,
                     audio_peak_dbfs=float(audio_peak),
                     audio_rms_dbfs=float(audio_rms),
                     rssi_antenna_1_dbm=rssi_1,
@@ -127,8 +141,8 @@ class SlxdDataUpdateCoordinator(DataUpdateCoordinator[SlxdDevice]):
                 model=model,
                 device_id=device_id,
                 firmware_version=firmware_version,
-                rf_band="",  # Would need additional API call
-                lock_status=LockStatus.OFF,
+                rf_band=rf_band,
+                lock_status=lock_status,
                 channels=channels,
             )
 

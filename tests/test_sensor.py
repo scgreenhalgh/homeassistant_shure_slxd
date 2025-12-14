@@ -247,3 +247,103 @@ async def test_sensors_unavailable_on_update_failed(
         # State might be None or unavailable depending on how setup handles errors
         if state is not None:
             assert state.state == "unavailable"
+
+
+async def test_rf_band_sensor_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test RF band sensor reports correct state."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_client_class:
+        mock_client = create_mock_slxd_client()
+        mock_client_class.return_value = mock_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.shure_slxd4d_rf_band")
+        assert state is not None
+        assert state.state == "G55"
+
+
+async def test_lock_status_sensor_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test lock status sensor reports correct state."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_client_class:
+        mock_client = create_mock_slxd_client()
+        mock_client_class.return_value = mock_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.shure_slxd4d_lock_status")
+        assert state is not None
+        assert state.state == "ALL"
+
+
+async def test_channel_name_sensor_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test channel name sensor reports correct state."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_client_class:
+        mock_client = create_mock_slxd_client()
+        mock_client_class.return_value = mock_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.shure_slxd4d_channel_1_name")
+        assert state is not None
+        assert state.state == "Lead Vox"
+
+
+async def test_group_channel_sensor_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test group/channel sensor reports correct state."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_client_class:
+        mock_client = create_mock_slxd_client()
+        mock_client_class.return_value = mock_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.shure_slxd4d_channel_1_group_channel")
+        assert state is not None
+        assert state.state == "1,1"
+
+
+async def test_transmitter_model_sensor_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test transmitter model sensor reports correct state."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_client_class:
+        mock_client = create_mock_slxd_client()
+        mock_client_class.return_value = mock_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.shure_slxd4d_channel_1_transmitter_model")
+        assert state is not None
+        assert state.state == "SLXD2"

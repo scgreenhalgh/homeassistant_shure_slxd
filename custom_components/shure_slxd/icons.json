@@ -1,0 +1,74 @@
+{
+  "entity": {
+    "sensor": {
+      "firmware_version": {
+        "default": "mdi:information-outline"
+      },
+      "model": {
+        "default": "mdi:microphone"
+      },
+      "rf_band": {
+        "default": "mdi:radio-tower"
+      },
+      "lock_status": {
+        "default": "mdi:lock"
+      },
+      "audio_gain": {
+        "default": "mdi:volume-high"
+      },
+      "audio_peak": {
+        "default": "mdi:waveform"
+      },
+      "audio_rms": {
+        "default": "mdi:waveform"
+      },
+      "rssi_antenna_1": {
+        "default": "mdi:signal"
+      },
+      "rssi_antenna_2": {
+        "default": "mdi:signal"
+      },
+      "frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "battery_bars": {
+        "default": "mdi:battery"
+      },
+      "battery_minutes": {
+        "default": "mdi:battery-clock"
+      },
+      "channel_name": {
+        "default": "mdi:label"
+      },
+      "group_channel": {
+        "default": "mdi:format-list-numbered"
+      },
+      "transmitter_model": {
+        "default": "mdi:microphone-variant"
+      }
+    },
+    "binary_sensor": {
+      "transmitter_connected": {
+        "default": "mdi:microphone-off",
+        "state": {
+          "on": "mdi:microphone"
+        }
+      }
+    },
+    "button": {
+      "identify": {
+        "default": "mdi:flash"
+      }
+    },
+    "number": {
+      "audio_gain": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "select": {
+      "audio_output_level": {
+        "default": "mdi:volume-source"
+      }
+    }
+  }
+}

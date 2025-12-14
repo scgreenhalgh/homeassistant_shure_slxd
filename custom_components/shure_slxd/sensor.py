@@ -52,6 +52,18 @@ DEVICE_SENSORS: tuple[SlxdSensorEntityDescription, ...] = (
         name="Model",
         value_fn=lambda device: device.model,
     ),
+    SlxdSensorEntityDescription(
+        key="rf_band",
+        translation_key="rf_band",
+        name="RF Band",
+        value_fn=lambda device: device.rf_band,
+    ),
+    SlxdSensorEntityDescription(
+        key="lock_status",
+        translation_key="lock_status",
+        name="Lock Status",
+        value_fn=lambda device: device.lock_status.value,
+    ),
 )
 
 CHANNEL_SENSORS: tuple[SlxdChannelSensorEntityDescription, ...] = (
@@ -125,6 +137,26 @@ CHANNEL_SENSORS: tuple[SlxdChannelSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda channel: (
             channel.transmitter.battery_minutes if channel.transmitter else None
+        ),
+    ),
+    SlxdChannelSensorEntityDescription(
+        key="channel_name",
+        translation_key="channel_name",
+        name="Name",
+        value_fn=lambda channel: channel.name,
+    ),
+    SlxdChannelSensorEntityDescription(
+        key="group_channel",
+        translation_key="group_channel",
+        name="Group/Channel",
+        value_fn=lambda channel: channel.group_channel,
+    ),
+    SlxdChannelSensorEntityDescription(
+        key="transmitter_model",
+        translation_key="transmitter_model",
+        name="Transmitter Model",
+        value_fn=lambda channel: (
+            channel.transmitter.model.value if channel.transmitter else None
         ),
     ),
 )

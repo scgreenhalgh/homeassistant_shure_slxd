@@ -23,18 +23,37 @@ Home Assistant integration for Shure SLX-D wireless microphone receivers. Monito
 **Device-level:**
 - Firmware Version
 - Model
+- RF Band
+- Lock Status
 
 **Channel-level (per channel):**
 - Audio Gain (dB)
+- Audio Peak (dBFS)
+- Audio RMS (dBFS)
+- RSSI Antenna A/B (dBm)
+- Frequency (MHz)
+- Channel Name
+- Group/Channel
+- Battery Bars (0-5)
+- Battery Time (minutes)
+- Transmitter Model
 
-### Planned Features
+### Binary Sensors
 
-- Audio level metering (peak/RMS)
-- RSSI signal strength
-- Transmitter battery status
-- Frequency display
-- Gain control (number entity)
-- Flash/Identify buttons
+**Channel-level (per channel):**
+- Transmitter Connected
+
+### Controls
+
+**Number Entities:**
+- Audio Gain (-18 to +42 dB) - adjustable slider
+
+**Button Entities:**
+- Identify Device (flash all LEDs)
+- Identify Channel (flash channel LED)
+
+**Select Entities:**
+- Audio Output Level (MIC/LINE)
 
 ## Prerequisites
 
@@ -51,7 +70,7 @@ Before setting up the integration:
 1. Open HACS in Home Assistant
 2. Click the three dots in the top right corner
 3. Select "Custom repositories"
-4. Add this repository URL: `https://github.com/seangreenhalgh/homeassistant_sennheiser_slxd`
+4. Add this repository URL: `https://github.com/scgreenhalgh/homeassistant_shure_slxd`
 5. Select "Integration" as the category
 6. Click "Add"
 7. Search for "Shure SLX-D" and install
@@ -86,6 +105,8 @@ After setup, the following entities are created:
 |--------|-------------|
 | `sensor.<device>_firmware_version` | Current firmware version |
 | `sensor.<device>_model` | Device model (SLXD4, SLXD4D, SLXD4Q+) |
+| `sensor.<device>_rf_band` | RF frequency band (e.g., G55) |
+| `sensor.<device>_lock_status` | Front panel lock status |
 
 ### Channel Sensors
 
@@ -94,6 +115,36 @@ For each channel (1-4 depending on model):
 | Entity | Description | Unit |
 |--------|-------------|------|
 | `sensor.<device>_channel_X_audio_gain` | Audio gain setting | dB |
+| `sensor.<device>_channel_X_audio_peak` | Peak audio level | dBFS |
+| `sensor.<device>_channel_X_audio_rms` | RMS audio level | dBFS |
+| `sensor.<device>_channel_X_rssi_antenna_a` | RSSI for antenna A | dBm |
+| `sensor.<device>_channel_X_rssi_antenna_b` | RSSI for antenna B | dBm |
+| `sensor.<device>_channel_X_frequency` | Operating frequency | MHz |
+| `sensor.<device>_channel_X_name` | Channel name | - |
+| `sensor.<device>_channel_X_group_channel` | Group/channel preset | - |
+| `sensor.<device>_channel_X_battery_bars` | Transmitter battery bars | 0-5 |
+| `sensor.<device>_channel_X_battery_time` | Transmitter battery time | min |
+| `sensor.<device>_channel_X_transmitter_model` | Transmitter model | - |
+
+### Channel Binary Sensors
+
+| Entity | Description |
+|--------|-------------|
+| `binary_sensor.<device>_channel_X_transmitter_connected` | Transmitter link status |
+
+### Channel Controls
+
+| Entity | Description | Range |
+|--------|-------------|-------|
+| `number.<device>_channel_X_audio_gain` | Adjustable audio gain | -18 to +42 dB |
+| `button.<device>_channel_X_identify` | Flash channel LED | - |
+| `select.<device>_channel_X_audio_output_level` | Output level setting | MIC/LINE |
+
+### Device Controls
+
+| Entity | Description |
+|--------|-------------|
+| `button.<device>_identify` | Flash all device LEDs |
 
 ## Technical Details
 
@@ -151,16 +202,22 @@ homeassistant_sennheiser_slxd/
 │   │   ├── protocol.py              # Command/response parsing
 │   │   ├── models.py                # Data models
 │   │   └── exceptions.py            # Custom exceptions
-│   └── tests/                       # Library tests (85 tests)
+│   └── tests/                       # Library tests (112 tests)
 │
 ├── custom_components/shure_slxd/    # HA Integration
 │   ├── __init__.py                  # Integration setup
 │   ├── config_flow.py               # UI configuration
 │   ├── coordinator.py               # Data update coordinator
 │   ├── sensor.py                    # Sensor entities
+│   ├── binary_sensor.py             # Binary sensor entities
+│   ├── number.py                    # Number entities (gain control)
+│   ├── button.py                    # Button entities (identify)
+│   ├── select.py                    # Select entities (output level)
+│   ├── icons.json                   # Entity icons
+│   ├── strings.json                 # Translations
 │   └── const.py                     # Constants
 │
-└── tests/                           # Integration tests (21 tests)
+└── tests/                           # Integration tests (48+ tests)
 ```
 
 ### Running Tests

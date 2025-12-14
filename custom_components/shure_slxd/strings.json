@@ -17,5 +17,36 @@
     "abort": {
       "already_configured": "This device is already configured."
     }
+  },
+  "entity": {
+    "sensor": {
+      "firmware_version": { "name": "Firmware Version" },
+      "model": { "name": "Model" },
+      "rf_band": { "name": "RF Band" },
+      "lock_status": { "name": "Lock Status" },
+      "audio_gain": { "name": "Audio Gain" },
+      "audio_peak": { "name": "Audio Peak" },
+      "audio_rms": { "name": "Audio RMS" },
+      "rssi_antenna_1": { "name": "RSSI Antenna A" },
+      "rssi_antenna_2": { "name": "RSSI Antenna B" },
+      "frequency": { "name": "Frequency" },
+      "battery_bars": { "name": "Battery Bars" },
+      "battery_minutes": { "name": "Battery Time" },
+      "channel_name": { "name": "Name" },
+      "group_channel": { "name": "Group/Channel" },
+      "transmitter_model": { "name": "Transmitter Model" }
+    },
+    "binary_sensor": {
+      "transmitter_connected": { "name": "Transmitter Connected" }
+    },
+    "button": {
+      "identify": { "name": "Identify" }
+    },
+    "number": {
+      "audio_gain": { "name": "Audio Gain" }
+    },
+    "select": {
+      "audio_output_level": { "name": "Audio Output Level" }
+    }
   }
 }
