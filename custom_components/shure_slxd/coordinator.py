@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
-from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -23,9 +22,6 @@ from pyslxd.models import (
 )
 
 from .const import DEFAULT_SCAN_INTERVAL
-
-if TYPE_CHECKING:
-    pass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,19 +81,45 @@ class SlxdDataUpdateCoordinator(DataUpdateCoordinator[SlxdDevice]):
             # Fetch channel data
             channels = []
             for ch_num in range(1, channel_count + 1):
+                # Fetch all channel properties
                 gain_db = await client.get_audio_gain(ch_num)
+                frequency_khz = await client.get_frequency(ch_num)
+                channel_name = await client.get_channel_name(ch_num)
+                audio_peak = await client.get_audio_level_peak(ch_num)
+                audio_rms = await client.get_audio_level_rms(ch_num)
+                rssi_1 = await client.get_rssi(ch_num, antenna=1)
+                rssi_2 = await client.get_rssi(ch_num, antenna=2)
+
+                # Fetch transmitter info
+                tx_model_str = await client.get_tx_model(ch_num)
+                tx_batt_bars = await client.get_tx_batt_bars(ch_num)
+                tx_batt_mins = await client.get_tx_batt_mins(ch_num)
+
+                # Create transmitter object if we have valid data
+                transmitter = None
+                if tx_model_str and tx_model_str != "UNKNOWN":
+                    try:
+                        tx_model = TransmitterModel(tx_model_str)
+                    except ValueError:
+                        tx_model = TransmitterModel.UNKNOWN
+                    transmitter = SlxdTransmitter(
+                        model=tx_model,
+                        battery_bars=tx_batt_bars,
+                        battery_minutes=tx_batt_mins,
+                    )
+
                 channel = SlxdChannel(
                     number=ch_num,
-                    name=f"Channel {ch_num}",
-                    frequency_khz=0,  # Would need additional API calls
+                    name=channel_name or f"Channel {ch_num}",
+                    frequency_khz=frequency_khz,
                     group_channel="",
                     audio_gain_db=gain_db,
                     audio_out_level=AudioOutputLevel.MIC,
-                    audio_peak_dbfs=-120.0,
-                    audio_rms_dbfs=-120.0,
-                    rssi_antenna_1_dbm=-120,
-                    rssi_antenna_2_dbm=-120,
-                    transmitter=None,
+                    audio_peak_dbfs=float(audio_peak),
+                    audio_rms_dbfs=float(audio_rms),
+                    rssi_antenna_1_dbm=rssi_1,
+                    rssi_antenna_2_dbm=rssi_2,
+                    transmitter=transmitter,
                 )
                 channels.append(channel)
 

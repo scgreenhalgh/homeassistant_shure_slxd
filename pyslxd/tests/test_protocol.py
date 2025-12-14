@@ -87,6 +87,41 @@ class TestBuildCommand:
         # Assert
         assert result == "< SET 1 CHAN_NAME {Lead Vox} >"
 
+    def test_build_command_rejects_invalid_property_name_lowercase(self) -> None:
+        """Test that lowercase property names are rejected."""
+        with pytest.raises(ValueError, match="Invalid property name"):
+            build_command(CommandType.GET, "model")
+
+    def test_build_command_rejects_invalid_property_name_special_chars(self) -> None:
+        """Test that property names with special characters are rejected."""
+        with pytest.raises(ValueError, match="Invalid property name"):
+            build_command(CommandType.GET, "MODEL;DROP")
+
+    def test_build_command_rejects_invalid_property_name_spaces(self) -> None:
+        """Test that property names with spaces are rejected."""
+        with pytest.raises(ValueError, match="Invalid property name"):
+            build_command(CommandType.GET, "MODEL NAME")
+
+    def test_build_command_rejects_value_with_angle_brackets(self) -> None:
+        """Test that values with angle brackets are rejected."""
+        with pytest.raises(ValueError, match="Invalid characters in value"):
+            build_command(CommandType.SET, "CHAN_NAME", channel=1, value="<malicious>")
+
+    def test_build_command_rejects_value_with_newline(self) -> None:
+        """Test that values with newlines are rejected."""
+        with pytest.raises(ValueError, match="Invalid characters in value"):
+            build_command(CommandType.SET, "CHAN_NAME", channel=1, value="test\ninjection")
+
+    def test_build_command_rejects_value_with_carriage_return(self) -> None:
+        """Test that values with carriage returns are rejected."""
+        with pytest.raises(ValueError, match="Invalid characters in value"):
+            build_command(CommandType.SET, "CHAN_NAME", channel=1, value="test\rinjection")
+
+    def test_build_command_allows_valid_property_with_numbers(self) -> None:
+        """Test that property names with numbers are allowed."""
+        result = build_command(CommandType.GET, "FW_VER")
+        assert result == "< GET FW_VER >"
+
 
 class TestParseResponse:
     """Tests for response parsing functions."""
@@ -317,6 +352,20 @@ class TestParseResponse:
         assert result.command_type == CommandType.SAMPLE
         assert result.channel == 1
         assert result.values == [102, 102, 86]
+
+    def test_parse_sample_response_with_invalid_channel_raises_error(self) -> None:
+        """Test that SAMPLE response with non-numeric channel raises error."""
+        response = "< SAMPLE abc ALL 102 102 086 >"
+
+        with pytest.raises(SlxdProtocolError, match="Invalid numeric values"):
+            parse_response(response)
+
+    def test_parse_sample_response_with_invalid_values_raises_error(self) -> None:
+        """Test that SAMPLE response with non-numeric values raises error."""
+        response = "< SAMPLE 1 ALL 102 invalid 086 >"
+
+        with pytest.raises(SlxdProtocolError, match="Invalid numeric values"):
+            parse_response(response)
 
 
 class TestValueConversions:

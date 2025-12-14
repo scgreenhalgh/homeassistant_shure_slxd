@@ -28,6 +28,8 @@ from pyslxd.models import (
     TransmitterModel,
 )
 
+from tests.test_utils import create_mock_slxd_client
+
 
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -100,13 +102,7 @@ async def test_sensor_setup_creates_device_sensors(
     with patch(
         "custom_components.shure_slxd.coordinator.SlxdClient"
     ) as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.connect = AsyncMock()
-        mock_client.disconnect = AsyncMock()
-        mock_client.get_model = AsyncMock(return_value="SLXD4D")
-        mock_client.get_device_id = AsyncMock(return_value="SLXD4D01")
-        mock_client.get_firmware_version = AsyncMock(return_value="2.0.15.2")
-        mock_client.get_audio_gain = AsyncMock(return_value=12)
+        mock_client = create_mock_slxd_client()
         mock_client_class.return_value = mock_client
 
         mock_config_entry.add_to_hass(hass)
@@ -118,7 +114,7 @@ async def test_sensor_setup_creates_device_sensors(
 
         # Firmware version sensor
         fw_entity = entity_registry.async_get(
-            f"sensor.shure_slxd4d_firmware_version"
+            "sensor.shure_slxd4d_firmware_version"
         )
         assert fw_entity is not None
 
@@ -132,13 +128,7 @@ async def test_sensor_setup_creates_channel_sensors(
     with patch(
         "custom_components.shure_slxd.coordinator.SlxdClient"
     ) as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.connect = AsyncMock()
-        mock_client.disconnect = AsyncMock()
-        mock_client.get_model = AsyncMock(return_value="SLXD4D")
-        mock_client.get_device_id = AsyncMock(return_value="SLXD4D01")
-        mock_client.get_firmware_version = AsyncMock(return_value="2.0.15.2")
-        mock_client.get_audio_gain = AsyncMock(return_value=12)
+        mock_client = create_mock_slxd_client()
         mock_client_class.return_value = mock_client
 
         mock_config_entry.add_to_hass(hass)
@@ -149,9 +139,20 @@ async def test_sensor_setup_creates_channel_sensors(
 
         # Check channel 1 audio gain sensor exists
         gain_entity = entity_registry.async_get(
-            f"sensor.shure_slxd4d_channel_1_audio_gain"
+            "sensor.shure_slxd4d_channel_1_audio_gain"
         )
         assert gain_entity is not None
+
+        # Check new sensors exist
+        peak_entity = entity_registry.async_get(
+            "sensor.shure_slxd4d_channel_1_audio_peak"
+        )
+        assert peak_entity is not None
+
+        rssi_entity = entity_registry.async_get(
+            "sensor.shure_slxd4d_channel_1_rssi_antenna_a"
+        )
+        assert rssi_entity is not None
 
 
 async def test_firmware_sensor_state(
@@ -163,13 +164,7 @@ async def test_firmware_sensor_state(
     with patch(
         "custom_components.shure_slxd.coordinator.SlxdClient"
     ) as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.connect = AsyncMock()
-        mock_client.disconnect = AsyncMock()
-        mock_client.get_model = AsyncMock(return_value="SLXD4D")
-        mock_client.get_device_id = AsyncMock(return_value="SLXD4D01")
-        mock_client.get_firmware_version = AsyncMock(return_value="2.0.15.2")
-        mock_client.get_audio_gain = AsyncMock(return_value=12)
+        mock_client = create_mock_slxd_client()
         mock_client_class.return_value = mock_client
 
         mock_config_entry.add_to_hass(hass)
@@ -190,13 +185,7 @@ async def test_channel_audio_gain_sensor_state(
     with patch(
         "custom_components.shure_slxd.coordinator.SlxdClient"
     ) as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.connect = AsyncMock()
-        mock_client.disconnect = AsyncMock()
-        mock_client.get_model = AsyncMock(return_value="SLXD4D")
-        mock_client.get_device_id = AsyncMock(return_value="SLXD4D01")
-        mock_client.get_firmware_version = AsyncMock(return_value="2.0.15.2")
-        mock_client.get_audio_gain = AsyncMock(return_value=12)
+        mock_client = create_mock_slxd_client()
         mock_client_class.return_value = mock_client
 
         mock_config_entry.add_to_hass(hass)
@@ -217,13 +206,7 @@ async def test_sensor_unique_id(
     with patch(
         "custom_components.shure_slxd.coordinator.SlxdClient"
     ) as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.connect = AsyncMock()
-        mock_client.disconnect = AsyncMock()
-        mock_client.get_model = AsyncMock(return_value="SLXD4D")
-        mock_client.get_device_id = AsyncMock(return_value="SLXD4D01")
-        mock_client.get_firmware_version = AsyncMock(return_value="2.0.15.2")
-        mock_client.get_audio_gain = AsyncMock(return_value=12)
+        mock_client = create_mock_slxd_client()
         mock_client_class.return_value = mock_client
 
         mock_config_entry.add_to_hass(hass)
@@ -232,7 +215,7 @@ async def test_sensor_unique_id(
 
         entity_registry = er.async_get(hass)
         fw_entity = entity_registry.async_get(
-            f"sensor.shure_slxd4d_firmware_version"
+            "sensor.shure_slxd4d_firmware_version"
         )
         assert fw_entity is not None
         assert fw_entity.unique_id == "SLXD4D01_firmware_version"

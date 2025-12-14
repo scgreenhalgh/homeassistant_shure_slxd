@@ -45,6 +45,13 @@ BATTERY_MINS_UNKNOWN = 65535
 BATTERY_BARS_UNKNOWN = 255
 
 
+# Pattern for valid property names (uppercase letters and underscores)
+PROPERTY_NAME_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
+
+# Characters not allowed in values (protocol delimiters)
+INVALID_VALUE_CHARS = frozenset("<>\r\n")
+
+
 def build_command(
     command_type: CommandType,
     property_name: str,
@@ -61,7 +68,23 @@ def build_command(
 
     Returns:
         Formatted command string
+
+    Raises:
+        ValueError: If property_name or value contains invalid characters
     """
+    # Validate property name
+    if not PROPERTY_NAME_PATTERN.match(property_name):
+        raise ValueError(
+            f"Invalid property name '{property_name}': must be uppercase letters, "
+            "digits, and underscores only"
+        )
+
+    # Validate value doesn't contain protocol delimiters
+    if value is not None and any(c in value for c in INVALID_VALUE_CHARS):
+        raise ValueError(
+            f"Invalid characters in value: cannot contain <, >, CR, or LF"
+        )
+
     parts = [command_type.value]
 
     if channel is not None:
@@ -139,14 +162,22 @@ def _parse_sample_response(remaining: str) -> ParsedResponse:
 
     Returns:
         ParsedResponse with metering values
+
+    Raises:
+        SlxdProtocolError: If response is malformed or contains invalid values
     """
     parts = remaining.split()
     if len(parts) < 2:
         raise SlxdProtocolError(f"Invalid SAMPLE response: {remaining}")
 
-    channel = int(parts[0])
-    # parts[1] is "ALL"
-    values = [int(v) for v in parts[2:]]
+    try:
+        channel = int(parts[0])
+        # parts[1] is "ALL"
+        values = [int(v) for v in parts[2:]]
+    except ValueError as err:
+        raise SlxdProtocolError(
+            f"Invalid numeric values in SAMPLE response: {remaining}"
+        ) from err
 
     return ParsedResponse(
         command_type=CommandType.SAMPLE,

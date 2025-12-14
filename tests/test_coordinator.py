@@ -28,6 +28,8 @@ from pyslxd.models import (
     TransmitterModel,
 )
 
+from tests.test_utils import create_mock_slxd_client
+
 
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -112,13 +114,7 @@ async def test_coordinator_update_success(
     with patch(
         "custom_components.shure_slxd.coordinator.SlxdClient"
     ) as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.connect = AsyncMock()
-        mock_client.disconnect = AsyncMock()
-        mock_client.get_model = AsyncMock(return_value="SLXD4D")
-        mock_client.get_device_id = AsyncMock(return_value="SLXD4D01")
-        mock_client.get_firmware_version = AsyncMock(return_value="2.0.15.2")
-        mock_client.get_audio_gain = AsyncMock(return_value=12)
+        mock_client = create_mock_slxd_client()
         mock_client_class.return_value = mock_client
 
         coordinator = SlxdDataUpdateCoordinator(
@@ -226,13 +222,7 @@ async def test_coordinator_data_contains_channels(
     with patch(
         "custom_components.shure_slxd.coordinator.SlxdClient"
     ) as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.connect = AsyncMock()
-        mock_client.disconnect = AsyncMock()
-        mock_client.get_model = AsyncMock(return_value="SLXD4D")
-        mock_client.get_device_id = AsyncMock(return_value="SLXD4D01")
-        mock_client.get_firmware_version = AsyncMock(return_value="2.0.15.2")
-        mock_client.get_audio_gain = AsyncMock(return_value=12)
+        mock_client = create_mock_slxd_client()
         mock_client_class.return_value = mock_client
 
         coordinator = SlxdDataUpdateCoordinator(
@@ -245,3 +235,10 @@ async def test_coordinator_data_contains_channels(
         # Should have channel data
         assert hasattr(data, "channels")
         assert len(data.channels) >= 1
+
+        # Verify channel data is populated
+        channel = data.channels[0]
+        assert channel.audio_gain_db == 12
+        assert channel.frequency_khz == 578350
+        assert channel.audio_peak_dbfs == -18.0
+        assert channel.rssi_antenna_1_dbm == -37

@@ -16,6 +16,8 @@ sys.path.insert(0, str(ROOT))
 # Import fixtures from pytest-homeassistant-custom-component
 pytest_plugins = ["pytest_homeassistant_custom_component"]
 
+from tests.test_utils import create_mock_slxd_client
+
 
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
@@ -29,12 +31,7 @@ def mock_slxd_client() -> Generator[MagicMock, None, None]:
     with patch(
         "custom_components.shure_slxd.config_flow.SlxdClient"
     ) as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.connect = AsyncMock()
-        mock_client.disconnect = AsyncMock()
-        mock_client.get_model = AsyncMock(return_value="SLXD4D")
-        mock_client.get_device_id = AsyncMock(return_value="SLXD4D01")
-        mock_client.get_firmware_version = AsyncMock(return_value="2.0.15.2")
+        mock_client = create_mock_slxd_client()
         mock_client_class.return_value = mock_client
         yield mock_client
 

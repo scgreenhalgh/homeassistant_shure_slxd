@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfFrequency
+from homeassistant.const import UnitOfFrequency, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -62,6 +62,70 @@ CHANNEL_SENSORS: tuple[SlxdChannelSensorEntityDescription, ...] = (
         native_unit_of_measurement="dB",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda channel: channel.audio_gain_db,
+    ),
+    SlxdChannelSensorEntityDescription(
+        key="audio_peak",
+        translation_key="audio_peak",
+        name="Audio Peak",
+        native_unit_of_measurement="dBFS",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda channel: channel.audio_peak_dbfs,
+    ),
+    SlxdChannelSensorEntityDescription(
+        key="audio_rms",
+        translation_key="audio_rms",
+        name="Audio RMS",
+        native_unit_of_measurement="dBFS",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda channel: channel.audio_rms_dbfs,
+    ),
+    SlxdChannelSensorEntityDescription(
+        key="rssi_antenna_1",
+        translation_key="rssi_antenna_1",
+        name="RSSI Antenna A",
+        native_unit_of_measurement="dBm",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda channel: channel.rssi_antenna_1_dbm,
+    ),
+    SlxdChannelSensorEntityDescription(
+        key="rssi_antenna_2",
+        translation_key="rssi_antenna_2",
+        name="RSSI Antenna B",
+        native_unit_of_measurement="dBm",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda channel: channel.rssi_antenna_2_dbm,
+    ),
+    SlxdChannelSensorEntityDescription(
+        key="frequency",
+        translation_key="frequency",
+        name="Frequency",
+        native_unit_of_measurement=UnitOfFrequency.MEGAHERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda channel: channel.frequency_mhz,
+    ),
+    SlxdChannelSensorEntityDescription(
+        key="battery_bars",
+        translation_key="battery_bars",
+        name="Battery Bars",
+        native_unit_of_measurement="bars",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda channel: (
+            channel.transmitter.battery_bars if channel.transmitter else None
+        ),
+    ),
+    SlxdChannelSensorEntityDescription(
+        key="battery_minutes",
+        translation_key="battery_minutes",
+        name="Battery Time",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda channel: (
+            channel.transmitter.battery_minutes if channel.transmitter else None
+        ),
     ),
 )
 

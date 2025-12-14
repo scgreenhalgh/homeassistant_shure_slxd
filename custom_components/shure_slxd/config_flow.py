@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -16,6 +17,9 @@ from pyslxd.exceptions import SlxdConnectionError
 from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# Timeout for connection attempts during config flow
+CONFIG_FLOW_TIMEOUT = 5.0  # seconds
 
 
 class ShureSlxdConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -42,12 +46,16 @@ class ShureSlxdConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors=errors,
                 )
 
-            # Try to connect to the device
+            # Try to connect to the device with timeout
             client = SlxdClient()
             try:
-                await client.connect(host, port)
+                await asyncio.wait_for(
+                    client.connect(host, port), timeout=CONFIG_FLOW_TIMEOUT
+                )
                 model = await client.get_model()
                 device_id = await client.get_device_id()
+            except asyncio.TimeoutError:
+                errors["base"] = "cannot_connect"
             except SlxdConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
