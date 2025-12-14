@@ -118,6 +118,7 @@ async def test_coordinator_update_success(
         mock_client.get_model = AsyncMock(return_value="SLXD4D")
         mock_client.get_device_id = AsyncMock(return_value="SLXD4D01")
         mock_client.get_firmware_version = AsyncMock(return_value="2.0.15.2")
+        mock_client.get_audio_gain = AsyncMock(return_value=12)
         mock_client_class.return_value = mock_client
 
         coordinator = SlxdDataUpdateCoordinator(
