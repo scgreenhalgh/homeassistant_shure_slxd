@@ -89,21 +89,19 @@ async def test_flow_user_already_configured(
     hass: HomeAssistant, mock_slxd_client: MagicMock
 ) -> None:
     """Test that flow aborts if device already configured."""
-    # First, create an existing entry
-    entry = config_entries.ConfigEntry(
+    # First, create an existing entry using MockConfigEntry
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
         data={
             "host": "192.168.1.100",
             "port": 2202,
             "device_id": "SLXD4D01",
             "model": "SLXD4D",
         },
-        domain=DOMAIN,
-        minor_version=1,
-        options={},
         title="Shure SLXD4D",
         unique_id="SLXD4D01",
-        version=1,
-        source=config_entries.SOURCE_USER,
     )
     entry.add_to_hass(hass)
 
