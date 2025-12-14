@@ -1,11 +1,16 @@
 """Protocol handling for Shure SLX-D devices.
 
-Stub file for TDD RED phase - tests are written, implementation pending.
+This module handles building commands and parsing responses for the
+SLX-D ASCII protocol over TCP port 2202.
 """
 
+from __future__ import annotations
+
+import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+
+from pyslxd.exceptions import SlxdProtocolError
 
 
 class CommandType(Enum):
@@ -30,6 +35,16 @@ class ParsedResponse:
     values: list[int] | None = None
 
 
+# Constants for value conversions
+AUDIO_GAIN_OFFSET = 18
+AUDIO_LEVEL_OFFSET = 120
+RSSI_OFFSET = 120
+BATTERY_MINS_WARNING = 65533
+BATTERY_MINS_CALCULATING = 65534
+BATTERY_MINS_UNKNOWN = 65535
+BATTERY_BARS_UNKNOWN = 255
+
+
 def build_command(
     command_type: CommandType,
     property_name: str,
@@ -46,11 +61,18 @@ def build_command(
 
     Returns:
         Formatted command string
-
-    Raises:
-        NotImplementedError: Stub - not yet implemented
     """
-    raise NotImplementedError("TDD RED phase - implement to make tests pass")
+    parts = [command_type.value]
+
+    if channel is not None:
+        parts.append(str(channel))
+
+    parts.append(property_name)
+
+    if value is not None:
+        parts.append(value)
+
+    return f"< {' '.join(parts)} >"
 
 
 def parse_response(response: str) -> ParsedResponse:
@@ -64,13 +86,144 @@ def parse_response(response: str) -> ParsedResponse:
 
     Raises:
         SlxdProtocolError: If response is malformed
-        NotImplementedError: Stub - not yet implemented
     """
-    raise NotImplementedError("TDD RED phase - implement to make tests pass")
+    if not response:
+        raise SlxdProtocolError("Empty response")
+
+    # Check for valid response format
+    response = response.strip()
+    if not response.startswith("<") or not response.endswith(">"):
+        raise SlxdProtocolError(f"Invalid response format: {response}")
+
+    # Remove angle brackets and split
+    inner = response[1:-1].strip()
+    if not inner:
+        raise SlxdProtocolError(f"Empty response content: {response}")
+
+    # Parse command type
+    parts = inner.split(None, 1)
+    if not parts:
+        raise SlxdProtocolError(f"No command type in response: {response}")
+
+    try:
+        command_type = CommandType(parts[0])
+    except ValueError:
+        raise SlxdProtocolError(f"Unknown command type: {parts[0]}")
+
+    if len(parts) < 2:
+        raise SlxdProtocolError(f"Incomplete response: {response}")
+
+    remaining = parts[1]
+
+    # Handle SAMPLE responses
+    if command_type == CommandType.SAMPLE:
+        return _parse_sample_response(remaining)
+
+    # Parse channel number if present (starts with digit)
+    channel = None
+    if remaining and remaining[0].isdigit():
+        channel_match = re.match(r"(\d+)\s+", remaining)
+        if channel_match:
+            channel = int(channel_match.group(1))
+            remaining = remaining[channel_match.end():]
+
+    # Parse property name and value
+    return _parse_rep_response(command_type, remaining, channel)
+
+
+def _parse_sample_response(remaining: str) -> ParsedResponse:
+    """Parse a SAMPLE metering response.
+
+    Args:
+        remaining: Response content after SAMPLE keyword
+
+    Returns:
+        ParsedResponse with metering values
+    """
+    parts = remaining.split()
+    if len(parts) < 2:
+        raise SlxdProtocolError(f"Invalid SAMPLE response: {remaining}")
+
+    channel = int(parts[0])
+    # parts[1] is "ALL"
+    values = [int(v) for v in parts[2:]]
+
+    return ParsedResponse(
+        command_type=CommandType.SAMPLE,
+        property_name="ALL",
+        channel=channel,
+        values=values,
+    )
+
+
+def _parse_rep_response(
+    command_type: CommandType, remaining: str, channel: int | None
+) -> ParsedResponse:
+    """Parse a REP response.
+
+    Args:
+        command_type: The command type (REP)
+        remaining: Response content after channel (if present)
+        channel: Channel number or None
+
+    Returns:
+        ParsedResponse with property data
+    """
+    # Handle RSSI which has antenna number
+    rssi_match = re.match(r"RSSI\s+(\d+)\s+(\d+)", remaining)
+    if rssi_match:
+        antenna = int(rssi_match.group(1))
+        raw_value = int(rssi_match.group(2))
+        return ParsedResponse(
+            command_type=command_type,
+            property_name="RSSI",
+            channel=channel,
+            raw_value=raw_value,
+            antenna=antenna,
+        )
+
+    # Handle braced values (strings with padding)
+    brace_match = re.match(r"(\w+)\s+\{(.+)\}", remaining)
+    if brace_match:
+        property_name = brace_match.group(1)
+        value = brace_match.group(2).strip()
+        return ParsedResponse(
+            command_type=command_type,
+            property_name=property_name,
+            value=value,
+            channel=channel,
+        )
+
+    # Handle simple property value pairs
+    parts = remaining.split(None, 1)
+    if not parts:
+        raise SlxdProtocolError(f"No property name in response: {remaining}")
+
+    property_name = parts[0]
+    value = parts[1].strip() if len(parts) > 1 else None
+
+    # Try to parse numeric value
+    raw_value = None
+    if value is not None:
+        try:
+            raw_value = int(value)
+        except ValueError:
+            pass  # Not numeric, keep as string
+
+    return ParsedResponse(
+        command_type=command_type,
+        property_name=property_name,
+        value=value,
+        channel=channel,
+        raw_value=raw_value,
+    )
 
 
 def convert_audio_gain(value: int, to_raw: bool = False) -> int:
     """Convert audio gain between raw and dB values.
+
+    The SLX-D reports/accepts gain with an offset of 18.
+    Raw 0 = -18 dB, Raw 60 = +42 dB
 
     Args:
         value: Value to convert
@@ -78,56 +231,59 @@ def convert_audio_gain(value: int, to_raw: bool = False) -> int:
 
     Returns:
         Converted value
-
-    Raises:
-        NotImplementedError: Stub - not yet implemented
     """
-    raise NotImplementedError("TDD RED phase - implement to make tests pass")
+    if to_raw:
+        return value + AUDIO_GAIN_OFFSET
+    return value - AUDIO_GAIN_OFFSET
 
 
 def convert_audio_level(raw_value: int) -> int:
     """Convert raw audio level to dBFS.
+
+    The SLX-D reports audio levels with an offset of 120.
+    Raw 0 = -120 dBFS, Raw 120 = 0 dBFS
 
     Args:
         raw_value: Raw value from device (0-120)
 
     Returns:
         Audio level in dBFS (-120 to 0)
-
-    Raises:
-        NotImplementedError: Stub - not yet implemented
     """
-    raise NotImplementedError("TDD RED phase - implement to make tests pass")
+    return raw_value - AUDIO_LEVEL_OFFSET
 
 
 def convert_rssi(raw_value: int) -> int:
     """Convert raw RSSI value to dBm.
+
+    The SLX-D reports RSSI with an offset of 120.
+    Raw 0 = -120 dBm, Raw 120 = 0 dBm
 
     Args:
         raw_value: Raw value from device (0-120)
 
     Returns:
         RSSI in dBm (-120 to 0)
-
-    Raises:
-        NotImplementedError: Stub - not yet implemented
     """
-    raise NotImplementedError("TDD RED phase - implement to make tests pass")
+    return raw_value - RSSI_OFFSET
 
 
 def convert_battery_minutes(raw_value: int) -> int | None:
     """Convert raw battery minutes to actual minutes.
 
+    Special values:
+    - 65533: Battery communication warning
+    - 65534: Battery time calculating
+    - 65535: Unknown or not applicable
+
     Args:
         raw_value: Raw value from device
 
     Returns:
-        Minutes remaining, or None for special values (warning/calculating/unknown)
-
-    Raises:
-        NotImplementedError: Stub - not yet implemented
+        Minutes remaining, or None for special values
     """
-    raise NotImplementedError("TDD RED phase - implement to make tests pass")
+    if raw_value >= BATTERY_MINS_WARNING:
+        return None
+    return raw_value
 
 
 def convert_battery_bars(raw_value: int, as_percentage: bool = False) -> int | None:
@@ -139,8 +295,11 @@ def convert_battery_bars(raw_value: int, as_percentage: bool = False) -> int | N
 
     Returns:
         Battery bars (0-5), percentage (0-100), or None if unknown
-
-    Raises:
-        NotImplementedError: Stub - not yet implemented
     """
-    raise NotImplementedError("TDD RED phase - implement to make tests pass")
+    if raw_value == BATTERY_BARS_UNKNOWN:
+        return None
+
+    if as_percentage:
+        return raw_value * 20  # 0=0%, 1=20%, 2=40%, 3=60%, 4=80%, 5=100%
+
+    return raw_value
