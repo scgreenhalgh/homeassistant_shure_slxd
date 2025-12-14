@@ -148,14 +148,67 @@ async def test_flow_validates_host_format(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # Empty host should be caught by voluptuous schema
+    # Empty host should be caught by validation
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"host": ""},
     )
 
-    # Should show form with errors or remain on form
+    # Should show form with errors
     assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_host"}
+
+
+async def test_flow_validates_invalid_ip_format(hass: HomeAssistant) -> None:
+    """Test that invalid IP that looks like hostname results in connection error.
+
+    Note: "999.999.999.999" is invalid as IP but syntactically valid as hostname,
+    so validation passes but connection fails.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Invalid IP passes validation (could be hostname) but connection fails
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "999.999.999.999"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_flow_accepts_valid_hostname(
+    hass: HomeAssistant, mock_slxd_client: MagicMock
+) -> None:
+    """Test that valid hostname is accepted."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "shure-receiver.local"},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_flow_rejects_hostname_with_invalid_chars(hass: HomeAssistant) -> None:
+    """Test that hostname with invalid characters is rejected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Hostname with invalid chars
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "invalid_host!@#"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_host"}
 
 
 async def test_flow_default_port_when_omitted(

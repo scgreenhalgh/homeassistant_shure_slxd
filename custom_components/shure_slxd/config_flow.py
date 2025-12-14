@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import logging
+import re
 from typing import Any
 
 import voluptuous as vol
@@ -17,6 +19,31 @@ from pyslxd.exceptions import SlxdConnectionError
 from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# Hostname regex: alphanumeric, hyphens, dots, max 253 chars
+HOSTNAME_PATTERN = re.compile(
+    r"^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*$"
+)
+
+
+def _is_valid_host(host: str) -> bool:
+    """Validate host is a valid IP address or hostname.
+
+    Args:
+        host: Host string to validate
+
+    Returns:
+        True if valid IP address or hostname
+    """
+    # Try parsing as IP address first
+    try:
+        ipaddress.ip_address(host)
+        return True
+    except ValueError:
+        pass
+
+    # Check if valid hostname
+    return bool(HOSTNAME_PATTERN.match(host))
 
 # Timeout for connection attempts during config flow
 CONFIG_FLOW_TIMEOUT = 5.0  # seconds
@@ -37,9 +64,9 @@ class ShureSlxdConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input.get(CONF_HOST, "").strip()
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
 
-            # Validate host is not empty
-            if not host:
-                errors["base"] = "cannot_connect"
+            # Validate host is not empty and is a valid IP/hostname
+            if not host or not _is_valid_host(host):
+                errors["base"] = "invalid_host"
                 return self.async_show_form(
                     step_id="user",
                     data_schema=self._get_schema(),

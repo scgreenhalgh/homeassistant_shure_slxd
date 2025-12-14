@@ -12,6 +12,7 @@
     },
     "error": {
       "cannot_connect": "Unable to connect to device. Please check the IP address and ensure the device is powered on.",
+      "invalid_host": "Invalid IP address or hostname. Please enter a valid address.",
       "unknown": "An unexpected error occurred."
     },
     "abort": {

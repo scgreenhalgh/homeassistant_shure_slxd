@@ -848,3 +848,124 @@ class TestClientTransmitterInfo:
 
             mins = await client.get_tx_batt_mins(1)
             assert mins is None
+
+
+class TestClientAudioOutputLevel:
+    """Tests for audio output level methods."""
+
+    @pytest.mark.asyncio
+    async def test_get_audio_out_level(self) -> None:
+        """Test getting audio output level."""
+        mock_reader = AsyncMock()
+        mock_reader.readline = AsyncMock(
+            return_value=b"< REP 1 AUDIO_OUT_LVL MIC >\r\n"
+        )
+        mock_writer = MagicMock()
+        mock_writer.write = MagicMock()
+        mock_writer.drain = AsyncMock()
+        mock_writer.close = MagicMock()
+        mock_writer.wait_closed = AsyncMock()
+
+        with patch(
+            "asyncio.open_connection",
+            return_value=(mock_reader, mock_writer),
+        ):
+            client = SlxdClient()
+            await client.connect("192.168.1.100")
+
+            level = await client.get_audio_out_level(1)
+            assert level == "MIC"
+            mock_writer.write.assert_called_with(b"< GET 1 AUDIO_OUT_LVL >\r\n")
+
+    @pytest.mark.asyncio
+    async def test_set_audio_out_level(self) -> None:
+        """Test setting audio output level."""
+        mock_reader = AsyncMock()
+        mock_reader.readline = AsyncMock(
+            return_value=b"< REP 1 AUDIO_OUT_LVL LINE >\r\n"
+        )
+        mock_writer = MagicMock()
+        mock_writer.write = MagicMock()
+        mock_writer.drain = AsyncMock()
+        mock_writer.close = MagicMock()
+        mock_writer.wait_closed = AsyncMock()
+
+        with patch(
+            "asyncio.open_connection",
+            return_value=(mock_reader, mock_writer),
+        ):
+            client = SlxdClient()
+            await client.connect("192.168.1.100")
+
+            await client.set_audio_out_level(1, "LINE")
+            mock_writer.write.assert_called_with(b"< SET 1 AUDIO_OUT_LVL LINE >\r\n")
+
+    @pytest.mark.asyncio
+    async def test_set_audio_out_level_validates_value(self) -> None:
+        """Test that invalid audio output level raises ValueError."""
+        mock_reader = AsyncMock()
+        mock_writer = MagicMock()
+        mock_writer.close = MagicMock()
+        mock_writer.wait_closed = AsyncMock()
+
+        with patch(
+            "asyncio.open_connection",
+            return_value=(mock_reader, mock_writer),
+        ):
+            client = SlxdClient()
+            await client.connect("192.168.1.100")
+
+            with pytest.raises(ValueError, match="Level must be 'MIC' or 'LINE'"):
+                await client.set_audio_out_level(1, "INVALID")
+
+    @pytest.mark.asyncio
+    async def test_set_audio_out_level_validates_channel(self) -> None:
+        """Test that invalid channel raises ValueError."""
+        mock_reader = AsyncMock()
+        mock_writer = MagicMock()
+        mock_writer.close = MagicMock()
+        mock_writer.wait_closed = AsyncMock()
+
+        with patch(
+            "asyncio.open_connection",
+            return_value=(mock_reader, mock_writer),
+        ):
+            client = SlxdClient()
+            await client.connect("192.168.1.100")
+
+            with pytest.raises(ValueError, match="Channel must be 1-4"):
+                await client.set_audio_out_level(0, "MIC")
+
+
+class TestClientRSSIValidation:
+    """Tests for RSSI antenna validation."""
+
+    @pytest.mark.asyncio
+    async def test_get_rssi_invalid_antenna(self) -> None:
+        """Test that invalid antenna raises ValueError."""
+        mock_reader = AsyncMock()
+        mock_writer = MagicMock()
+        mock_writer.close = MagicMock()
+        mock_writer.wait_closed = AsyncMock()
+
+        with patch(
+            "asyncio.open_connection",
+            return_value=(mock_reader, mock_writer),
+        ):
+            client = SlxdClient()
+            await client.connect("192.168.1.100")
+
+            with pytest.raises(ValueError, match="Antenna must be 1 or 2"):
+                await client.get_rssi(1, antenna=3)
+
+
+class TestClientConnectionErrors:
+    """Tests for connection edge cases."""
+
+    @pytest.mark.asyncio
+    async def test_connect_without_host_raises_error(self) -> None:
+        """Test that connecting without host raises SlxdConnectionError."""
+        client = SlxdClient()
+
+        with pytest.raises(SlxdConnectionError, match="No host specified"):
+            await client.connect()
