@@ -74,3 +74,6 @@ venv.bak/
 # Home Assistant
 config/
 .storage/
+
+# Claude Code
+.claude/
