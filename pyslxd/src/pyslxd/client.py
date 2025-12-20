@@ -83,23 +83,25 @@ class SlxdClient:
                 f"Channel must be {MIN_CHANNEL}-{MAX_CHANNEL}, got {channel}"
             )
 
-    async def connect(self, host: str | None = None, port: int = 2202) -> None:
+    async def connect(self, host: str | None = None, port: int | None = None) -> None:
         """Connect to device.
 
         Args:
             host: Device IP address (overrides constructor value)
-            port: TCP port (default 2202)
+            port: TCP port (overrides constructor value, default 2202)
 
         Raises:
             SlxdConnectionError: If connection fails
         """
         target_host = host or self._host
+        target_port = port if port is not None else self._port
+
         if target_host is None:
             raise SlxdConnectionError("No host specified")
 
         try:
             self._reader, self._writer = await asyncio.open_connection(
-                target_host, port
+                target_host, target_port
             )
             self._connected = True
             self._host = target_host
@@ -115,7 +117,11 @@ class SlxdClient:
         """Disconnect from device."""
         if self._writer is not None:
             self._writer.close()
-            await self._writer.wait_closed()
+            try:
+                await self._writer.wait_closed()
+            except (ConnectionResetError, BrokenPipeError, OSError):
+                # Connection already closed by remote end
+                pass
             self._writer = None
             self._reader = None
         self._connected = False

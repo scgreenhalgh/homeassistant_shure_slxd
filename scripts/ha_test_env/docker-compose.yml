@@ -1,0 +1,63 @@
+# Docker Compose configuration for Shure SLX-D Home Assistant Integration Testing
+#
+# This sets up:
+# - Home Assistant with the custom integration mounted
+# - Mock SLX-D server simulating a real receiver
+#
+# Usage:
+#   docker compose up -d           # Start environment
+#   docker compose logs -f         # View logs
+#   docker compose down            # Stop environment
+
+services:
+  homeassistant:
+    container_name: ha_slxd_test
+    image: ghcr.io/home-assistant/home-assistant:2024.12
+    volumes:
+      # Main config directory
+      - ./config:/config
+      # Mount the custom integration (read-only)
+      - ../../custom_components/shure_slxd:/config/custom_components/shure_slxd:ro
+      # Mount pyslxd library for the integration to use
+      - ../../pyslxd/src/pyslxd:/config/deps/pyslxd:ro
+    environment:
+      - TZ=UTC
+      # Add pyslxd to Python path
+      - PYTHONPATH=/config/deps
+    ports:
+      - "8123:8123"
+    depends_on:
+      mock_slxd:
+        condition: service_started
+    networks:
+      - slxd_test_net
+    restart: unless-stopped
+
+  mock_slxd:
+    container_name: mock_slxd
+    build:
+      context: ../..
+      dockerfile: scripts/ha_test_env/mock_server/Dockerfile
+    environment:
+      # Mock device configuration
+      - MOCK_MODEL=SLXD4D
+      - MOCK_DEVICE_ID=TEST0001
+      - MOCK_FIRMWARE=2.0.15.2
+      - MOCK_RF_BAND=G55
+      # Channel 1: Connected transmitter
+      - MOCK_CH1_TX_CONNECTED=true
+      - MOCK_CH1_TX_MODEL=SLXD2
+      - MOCK_CH1_BATTERY_BARS=4
+      - MOCK_CH1_BATTERY_MINS=240
+      - MOCK_CH1_NAME=Vocal 1
+      # Channel 2: No transmitter
+      - MOCK_CH2_NAME=Vocal 2
+    ports:
+      - "2202:2202"
+    networks:
+      - slxd_test_net
+    restart: unless-stopped
+
+networks:
+  slxd_test_net:
+    driver: bridge

@@ -1,0 +1,7 @@
+# Requirements for Home Assistant integration tests
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-homeassistant-custom-component>=0.13.0
+
+# The pyslxd library (install from local)
+-e ./pyslxd

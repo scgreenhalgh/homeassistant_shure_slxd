@@ -75,5 +75,14 @@ venv.bak/
 config/
 .storage/
 
+# Docker Test Environment
+scripts/ha_test_env/config/.storage/
+scripts/ha_test_env/config/.HA_VERSION
+scripts/ha_test_env/config/home-assistant.log*
+scripts/ha_test_env/config/home-assistant_v2.db
+scripts/ha_test_env/config/blueprints/
+scripts/ha_test_env/config/tts/
+scripts/ha_test_env/config/.ha_run.lock
+
 # Claude Code
 .claude/
