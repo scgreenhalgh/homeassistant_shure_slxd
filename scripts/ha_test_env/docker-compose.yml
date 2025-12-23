@@ -12,29 +12,29 @@
 services:
   homeassistant:
     container_name: ha_slxd_test
-    image: ghcr.io/home-assistant/home-assistant:2024.12
+    image: ghcr.io/home-assistant/home-assistant:2025.12
     volumes:
       # Main config directory
       - ./config:/config
       # Mount the custom integration (read-only)
       - ../../custom_components/shure_slxd:/config/custom_components/shure_slxd:ro
-      # Mount pyslxd library for the integration to use
-      - ../../pyslxd/src/pyslxd:/config/deps/pyslxd:ro
+      # Mount pyslxd library outside of /config to avoid HA managing it
+      - ../../pyslxd/src/pyslxd:/opt/pyslxd:ro
     environment:
       - TZ=UTC
       # Add pyslxd to Python path
-      - PYTHONPATH=/config/deps
+      - PYTHONPATH=/opt
     ports:
       - "8123:8123"
     depends_on:
-      mock_slxd:
+      mock-slxd:
         condition: service_started
     networks:
       - slxd_test_net
     restart: unless-stopped
 
-  mock_slxd:
-    container_name: mock_slxd
+  mock-slxd:
+    container_name: mock-slxd
     build:
       context: ../..
       dockerfile: scripts/ha_test_env/mock_server/Dockerfile

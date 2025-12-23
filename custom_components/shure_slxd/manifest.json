@@ -1,10 +1,11 @@
 {
   "domain": "shure_slxd",
   "name": "Shure SLX-D",
-  "codeowners": [],
+  "codeowners": ["@scgreenhalgh"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/scgreenhalgh/homeassistant_shure_slxd",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "requirements": [],
   "version": "0.1.0"

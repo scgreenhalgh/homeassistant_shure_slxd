@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 from datetime import timedelta
 
@@ -25,6 +26,11 @@ from .const import DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+# Check if DataUpdateCoordinator supports config_entry parameter (HA 2024.11+)
+_COORDINATOR_SUPPORTS_CONFIG_ENTRY = "config_entry" in inspect.signature(
+    DataUpdateCoordinator.__init__
+).parameters
+
 
 class SlxdDataUpdateCoordinator(DataUpdateCoordinator[SlxdDevice]):
     """Coordinator for SLX-D device data updates."""
@@ -42,13 +48,20 @@ class SlxdDataUpdateCoordinator(DataUpdateCoordinator[SlxdDevice]):
             hass: Home Assistant instance
             config_entry: Config entry for this integration
         """
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="Shure SLX-D",
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-        )
-        self.config_entry = config_entry
+        # Build kwargs for compatibility with different HA versions
+        kwargs: dict = {
+            "name": "Shure SLX-D",
+            "update_interval": timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+        }
+        if _COORDINATOR_SUPPORTS_CONFIG_ENTRY:
+            kwargs["config_entry"] = config_entry
+
+        super().__init__(hass, _LOGGER, **kwargs)
+
+        # Store config_entry for older HA versions
+        if not _COORDINATOR_SUPPORTS_CONFIG_ENTRY:
+            self.config_entry = config_entry
+
         self._host = config_entry.data[CONF_HOST]
         self._port = config_entry.data.get(CONF_PORT, 2202)
 
