@@ -85,5 +85,9 @@ scripts/ha_test_env/config/blueprints/
 scripts/ha_test_env/config/tts/
 scripts/ha_test_env/config/.ha_run.lock
 
-# Claude Code
+# Claude Code / AI Development Files
+# These files are kept in private repo: homeassistant_shure_slxd_private
 .claude/
+CLAUDE.md
+HOME_ASSISTANT_TESTING_ENVIRONMENT.md
+TESTING_PLAN.md
