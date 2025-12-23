@@ -47,8 +47,8 @@ class SlxdDataUpdateCoordinator(DataUpdateCoordinator[SlxdDevice]):
             _LOGGER,
             name="Shure SLX-D",
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-            config_entry=config_entry,
         )
+        self.config_entry = config_entry
         self._host = config_entry.data[CONF_HOST]
         self._port = config_entry.data.get(CONF_PORT, 2202)
 

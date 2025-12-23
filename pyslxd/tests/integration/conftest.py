@@ -13,6 +13,14 @@ from pyslxd.mock.server import MockSlxdServer
 from pyslxd.mock.state import MockDevice, MockTransmitter
 
 
+# Enable socket access for all integration tests
+# Required because pytest-homeassistant-custom-component includes pytest-socket
+@pytest.fixture(autouse=True)
+def socket_enabled(socket_enabled):
+    """Enable socket access for integration tests."""
+    return
+
+
 @pytest.fixture
 async def mock_server():
     """Create and start a mock SLX-D server (SLXD4D)."""
