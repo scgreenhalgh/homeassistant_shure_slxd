@@ -195,14 +195,15 @@ This project follows **strict Test-Driven Development (TDD)**. See [CLAUDE.md](C
 ### Project Structure
 
 ```
-homeassistant_sennheiser_slxd/
+homeassistant_shure_slxd/
 ├── pyslxd/                          # PyPI library for SLX-D communication
 │   ├── src/pyslxd/
 │   │   ├── client.py                # Async TCP client
 │   │   ├── protocol.py              # Command/response parsing
 │   │   ├── models.py                # Data models
-│   │   └── exceptions.py            # Custom exceptions
-│   └── tests/                       # Library tests (112 tests)
+│   │   ├── exceptions.py            # Custom exceptions
+│   │   └── mock/                    # Mock SLX-D server for testing
+│   └── tests/                       # Library tests (305 tests)
 │
 ├── custom_components/shure_slxd/    # HA Integration
 │   ├── __init__.py                  # Integration setup
@@ -217,7 +218,9 @@ homeassistant_sennheiser_slxd/
 │   ├── strings.json                 # Translations
 │   └── const.py                     # Constants
 │
-└── tests/                           # Integration tests (48+ tests)
+├── tests/                           # Integration tests (48 tests)
+│
+└── scripts/                         # Docker test environment & E2E tests
 ```
 
 ### Running Tests
