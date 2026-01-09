@@ -18,8 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.shure_slxd.const import DOMAIN
-
-from pyslxd.models import (
+from custom_components.shure_slxd.pyslxd.models import (
     AudioOutputLevel,
     LockStatus,
     SlxdChannel,
@@ -226,7 +225,7 @@ async def test_sensors_unavailable_on_update_failed(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensors become unavailable when update fails."""
-    from pyslxd.exceptions import SlxdConnectionError
+    from custom_components.shure_slxd.pyslxd.exceptions import SlxdConnectionError
 
     with patch(
         "custom_components.shure_slxd.coordinator.SlxdClient"

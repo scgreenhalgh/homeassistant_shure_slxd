@@ -109,7 +109,7 @@ async def test_number_entity_set_value(
     with patch(
         "custom_components.shure_slxd.coordinator.SlxdClient"
     ) as mock_coordinator_client_class, patch(
-        "pyslxd.client.SlxdClient"
+        "custom_components.shure_slxd.pyslxd.client.SlxdClient"
     ) as mock_number_client_class:
         # Mock for coordinator
         mock_coordinator_client = create_mock_slxd_client()

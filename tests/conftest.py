@@ -42,7 +42,7 @@ def mock_slxd_client_cannot_connect() -> Generator[MagicMock, None, None]:
     with patch(
         "custom_components.shure_slxd.config_flow.SlxdClient"
     ) as mock_client_class:
-        from pyslxd.exceptions import SlxdConnectionError
+        from custom_components.shure_slxd.pyslxd.exceptions import SlxdConnectionError
 
         mock_client = MagicMock()
         mock_client.connect = AsyncMock(

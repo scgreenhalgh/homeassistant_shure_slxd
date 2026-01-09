@@ -87,15 +87,22 @@ class SlxdAudioGainNumber(CoordinatorEntity[SlxdDataUpdateCoordinator], NumberEn
         """Set the audio gain value."""
         from .pyslxd.client import SlxdClient
 
+        new_gain = int(value)
+
+        # Optimistic update - update coordinator data immediately for instant UI response
+        if self.coordinator.data:
+            channel = self.coordinator.data.get_channel(self._channel_number)
+            if channel:
+                channel.audio_gain_db = new_gain
+                self.coordinator.async_set_updated_data(self.coordinator.data)
+
+        # Send command to device (don't wait for refresh - optimistic update handles UI)
         host = self.coordinator.config_entry.data["host"]
         port = self.coordinator.config_entry.data.get("port", 2202)
 
         client = SlxdClient()
         try:
             await client.connect(host, port)
-            await client.set_audio_gain(self._channel_number, int(value))
+            await client.set_audio_gain(self._channel_number, new_gain)
         finally:
             await client.disconnect()
-
-        # Request a coordinator refresh to update the state
-        await self.coordinator.async_request_refresh()

@@ -16,9 +16,8 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.shure_slxd.const import DOMAIN
 from custom_components.shure_slxd.coordinator import SlxdDataUpdateCoordinator
-
-from pyslxd.exceptions import SlxdConnectionError, SlxdTimeoutError
-from pyslxd.models import (
+from custom_components.shure_slxd.pyslxd.exceptions import SlxdConnectionError, SlxdTimeoutError
+from custom_components.shure_slxd.pyslxd.models import (
     AudioOutputLevel,
     BatteryStatus,
     LockStatus,
@@ -211,8 +210,8 @@ async def test_coordinator_update_interval(
         config_entry=mock_config_entry,
     )
 
-    # Default update interval should be 30 seconds
-    assert coordinator.update_interval == timedelta(seconds=30)
+    # Default update interval should be 10 seconds
+    assert coordinator.update_interval == timedelta(seconds=10)
 
 
 async def test_coordinator_data_contains_channels(

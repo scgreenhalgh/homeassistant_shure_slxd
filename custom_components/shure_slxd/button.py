@@ -185,19 +185,20 @@ class SlxdGainUpButton(
             return
 
         # Get current gain from coordinator data
-        current_gain = None
-        for channel in self.coordinator.data.channels:
-            if channel.number == self._channel_number:
-                current_gain = channel.audio_gain_db
-                break
-
-        if current_gain is None:
+        channel = self.coordinator.data.get_channel(self._channel_number)
+        if channel is None:
             return
+
+        current_gain = channel.audio_gain_db
 
         # Calculate new gain (clamped to valid range)
         new_gain = min(current_gain + GAIN_STEP_DB, GAIN_MAX_DB)
 
-        # Set new gain
+        # Optimistic update - update coordinator data immediately for instant UI response
+        channel.audio_gain_db = new_gain
+        self.coordinator.async_set_updated_data(self.coordinator.data)
+
+        # Send command to device (don't wait for refresh - optimistic update handles UI)
         host = self.coordinator.config_entry.data["host"]
         port = self.coordinator.config_entry.data.get("port", 2202)
 
@@ -207,9 +208,6 @@ class SlxdGainUpButton(
             await client.set_audio_gain(self._channel_number, new_gain)
         finally:
             await client.disconnect()
-
-        # Request coordinator refresh to update state
-        await self.coordinator.async_request_refresh()
 
 
 class SlxdGainDownButton(
@@ -253,19 +251,20 @@ class SlxdGainDownButton(
             return
 
         # Get current gain from coordinator data
-        current_gain = None
-        for channel in self.coordinator.data.channels:
-            if channel.number == self._channel_number:
-                current_gain = channel.audio_gain_db
-                break
-
-        if current_gain is None:
+        channel = self.coordinator.data.get_channel(self._channel_number)
+        if channel is None:
             return
+
+        current_gain = channel.audio_gain_db
 
         # Calculate new gain (clamped to valid range)
         new_gain = max(current_gain - GAIN_STEP_DB, GAIN_MIN_DB)
 
-        # Set new gain
+        # Optimistic update - update coordinator data immediately for instant UI response
+        channel.audio_gain_db = new_gain
+        self.coordinator.async_set_updated_data(self.coordinator.data)
+
+        # Send command to device (don't wait for refresh - optimistic update handles UI)
         host = self.coordinator.config_entry.data["host"]
         port = self.coordinator.config_entry.data.get("port", 2202)
 
@@ -275,6 +274,3 @@ class SlxdGainDownButton(
             await client.set_audio_gain(self._channel_number, new_gain)
         finally:
             await client.disconnect()
-
-        # Request coordinator refresh to update state
-        await self.coordinator.async_request_refresh()
