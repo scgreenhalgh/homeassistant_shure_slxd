@@ -146,7 +146,7 @@ class TestClientCommands:
     async def test_send_command_and_receive_response(self) -> None:
         """Test sending a command and receiving response."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP MODEL {SLXD4D                          } >\r\n"
         )
         mock_writer = MagicMock()
@@ -174,7 +174,7 @@ class TestClientCommands:
     async def test_send_command_timeout(self) -> None:
         """Test that command timeout raises SlxdTimeoutError."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(side_effect=asyncio.TimeoutError())
+        mock_reader.readuntil = AsyncMock(side_effect=asyncio.TimeoutError())
         mock_writer = MagicMock()
         mock_writer.write = MagicMock()
         mock_writer.drain = AsyncMock()
@@ -207,7 +207,7 @@ class TestClientDeviceInfo:
     async def test_get_model(self) -> None:
         """Test getting device model."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP MODEL {SLXD4D                          } >\r\n"
         )
         mock_writer = MagicMock()
@@ -230,7 +230,7 @@ class TestClientDeviceInfo:
     async def test_get_device_id(self) -> None:
         """Test getting device ID."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP DEVICE_ID {SLXD4D01} >\r\n"
         )
         mock_writer = MagicMock()
@@ -253,7 +253,7 @@ class TestClientDeviceInfo:
     async def test_get_firmware_version(self) -> None:
         """Test getting firmware version."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP FW_VER {2.0.15.2                } >\r\n"
         )
         mock_writer = MagicMock()
@@ -280,7 +280,7 @@ class TestClientChannelControl:
     async def test_get_audio_gain(self) -> None:
         """Test getting audio gain for a channel."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 AUDIO_GAIN 030 >\r\n"
         )
         mock_writer = MagicMock()
@@ -304,7 +304,7 @@ class TestClientChannelControl:
     async def test_set_audio_gain(self) -> None:
         """Test setting audio gain for a channel."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 AUDIO_GAIN 040 >\r\n"
         )
         mock_writer = MagicMock()
@@ -351,7 +351,7 @@ class TestClientChannelControl:
     async def test_flash_device(self) -> None:
         """Test flashing device LEDs."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP FLASH ON >\r\n"
         )
         mock_writer = MagicMock()
@@ -374,7 +374,7 @@ class TestClientChannelControl:
     async def test_flash_channel(self) -> None:
         """Test flashing specific channel LED."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 FLASH ON >\r\n"
         )
         mock_writer = MagicMock()
@@ -401,7 +401,7 @@ class TestClientMetering:
     async def test_start_metering(self) -> None:
         """Test starting metering for a channel."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 METER_RATE 01000 >\r\n"
         )
         mock_writer = MagicMock()
@@ -424,7 +424,7 @@ class TestClientMetering:
     async def test_stop_metering(self) -> None:
         """Test stopping metering for a channel."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 METER_RATE 00000 >\r\n"
         )
         mock_writer = MagicMock()
@@ -565,7 +565,7 @@ class TestClientResponseValidation:
         mock_reader = AsyncMock()
         # Create a response larger than MAX_RESPONSE_SIZE
         oversized_response = b"< REP MODEL " + b"X" * (MAX_RESPONSE_SIZE + 100) + b" >\r\n"
-        mock_reader.readline = AsyncMock(return_value=oversized_response)
+        mock_reader.readuntil = AsyncMock(return_value=oversized_response)
         mock_writer = MagicMock()
         mock_writer.write = MagicMock()
         mock_writer.drain = AsyncMock()
@@ -590,7 +590,7 @@ class TestClientChannelInfo:
     async def test_get_frequency(self) -> None:
         """Test getting channel frequency in kHz."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 FREQUENCY 0578350 >\r\n"
         )
         mock_writer = MagicMock()
@@ -614,7 +614,7 @@ class TestClientChannelInfo:
     async def test_get_channel_name(self) -> None:
         """Test getting channel name."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 CHAN_NAME {Lead Vox                       } >\r\n"
         )
         mock_writer = MagicMock()
@@ -637,7 +637,7 @@ class TestClientChannelInfo:
     async def test_get_audio_level_peak(self) -> None:
         """Test getting peak audio level in dBFS."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 AUDIO_LEVEL_PEAK 102 >\r\n"
         )
         mock_writer = MagicMock()
@@ -661,7 +661,7 @@ class TestClientChannelInfo:
     async def test_get_audio_level_rms(self) -> None:
         """Test getting RMS audio level in dBFS."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 AUDIO_LEVEL_RMS 090 >\r\n"
         )
         mock_writer = MagicMock()
@@ -685,7 +685,7 @@ class TestClientChannelInfo:
     async def test_get_rssi_antenna_1(self) -> None:
         """Test getting RSSI for antenna 1 in dBm."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 RSSI 1 083 >\r\n"
         )
         mock_writer = MagicMock()
@@ -710,7 +710,7 @@ class TestClientChannelInfo:
     async def test_get_rssi_antenna_2(self) -> None:
         """Test getting RSSI for antenna 2 in dBm."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 RSSI 2 064 >\r\n"
         )
         mock_writer = MagicMock()
@@ -738,7 +738,7 @@ class TestClientTransmitterInfo:
     async def test_get_tx_model(self) -> None:
         """Test getting transmitter model."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 TX_MODEL SLXD2 >\r\n"
         )
         mock_writer = MagicMock()
@@ -761,7 +761,7 @@ class TestClientTransmitterInfo:
     async def test_get_tx_batt_bars(self) -> None:
         """Test getting transmitter battery bars."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 TX_BATT_BARS 004 >\r\n"
         )
         mock_writer = MagicMock()
@@ -784,7 +784,7 @@ class TestClientTransmitterInfo:
     async def test_get_tx_batt_bars_unknown(self) -> None:
         """Test getting transmitter battery bars when unknown."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 TX_BATT_BARS 255 >\r\n"
         )
         mock_writer = MagicMock()
@@ -807,7 +807,7 @@ class TestClientTransmitterInfo:
     async def test_get_tx_batt_mins(self) -> None:
         """Test getting transmitter battery minutes."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 TX_BATT_MINS 00125 >\r\n"
         )
         mock_writer = MagicMock()
@@ -830,7 +830,7 @@ class TestClientTransmitterInfo:
     async def test_get_tx_batt_mins_calculating(self) -> None:
         """Test getting transmitter battery minutes when calculating."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 TX_BATT_MINS 65534 >\r\n"
         )
         mock_writer = MagicMock()
@@ -857,7 +857,7 @@ class TestClientAudioOutputLevel:
     async def test_get_audio_out_level(self) -> None:
         """Test getting audio output level."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 AUDIO_OUT_LVL MIC >\r\n"
         )
         mock_writer = MagicMock()
@@ -881,7 +881,7 @@ class TestClientAudioOutputLevel:
     async def test_set_audio_out_level(self) -> None:
         """Test setting audio output level."""
         mock_reader = AsyncMock()
-        mock_reader.readline = AsyncMock(
+        mock_reader.readuntil = AsyncMock(
             return_value=b"< REP 1 AUDIO_OUT_LVL LINE >\r\n"
         )
         mock_writer = MagicMock()

@@ -165,12 +165,15 @@ class SlxdClient:
         await self._writer.drain()
 
         # Read response with timeout
+        # Note: Real SLX-D devices send responses terminated with '>' but no newline
         try:
             response_bytes = await asyncio.wait_for(
-                self._reader.readline(), timeout=timeout
+                self._reader.readuntil(b">"), timeout=timeout
             )
         except asyncio.TimeoutError as err:
             raise SlxdTimeoutError(f"Command timed out after {timeout}s") from err
+        except asyncio.IncompleteReadError as err:
+            raise SlxdConnectionError("Connection closed unexpectedly") from err
 
         # Check response size limit
         if len(response_bytes) > MAX_RESPONSE_SIZE:
