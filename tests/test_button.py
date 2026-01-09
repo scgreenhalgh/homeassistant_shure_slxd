@@ -57,6 +57,67 @@ async def test_identify_device_button_created(
         assert entity is not None
 
 
+async def test_refresh_button_created(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that refresh button is created."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_client_class:
+        mock_client = create_mock_slxd_client()
+        mock_client_class.return_value = mock_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_registry = er.async_get(hass)
+        entity = entity_registry.async_get("button.shure_slxd4d_refresh")
+        assert entity is not None
+
+
+async def test_refresh_button_press(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that refresh button triggers an immediate data refresh."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_client_class:
+        mock_client = create_mock_slxd_client()
+        mock_client_class.return_value = mock_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Get the coordinator
+        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+
+        # Track refresh calls
+        original_refresh = coordinator.async_request_refresh
+        refresh_called = False
+
+        async def mock_refresh():
+            nonlocal refresh_called
+            refresh_called = True
+            await original_refresh()
+
+        coordinator.async_request_refresh = mock_refresh
+
+        # Press the refresh button
+        await hass.services.async_call(
+            "button",
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.shure_slxd4d_refresh"},
+            blocking=True,
+        )
+
+        # Verify refresh was called
+        assert refresh_called
+
+
 async def test_identify_channel_button_created(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

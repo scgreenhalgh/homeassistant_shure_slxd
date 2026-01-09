@@ -25,8 +25,9 @@ async def async_setup_entry(
 
     entities: list[ButtonEntity] = []
 
-    # Add device-level identify button
+    # Add device-level buttons
     entities.append(SlxdIdentifyDeviceButton(coordinator=coordinator))
+    entities.append(SlxdRefreshButton(coordinator=coordinator))
 
     # Add channel-level buttons
     if coordinator.data:
@@ -95,6 +96,48 @@ class SlxdIdentifyDeviceButton(
             await client.flash_device()
         finally:
             await client.disconnect()
+
+
+class SlxdRefreshButton(
+    CoordinatorEntity[SlxdDataUpdateCoordinator], ButtonEntity
+):
+    """Button entity to force an immediate data refresh from the device.
+
+    Useful for automations that need to update device state immediately
+    (e.g., when microphones are turned on for an event) rather than
+    waiting for the regular polling interval.
+    """
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:refresh"
+
+    def __init__(
+        self,
+        coordinator: SlxdDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the button entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.data['device_id']}_refresh"
+        )
+        self._attr_name = "Refresh"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.config_entry.data["device_id"])},
+            name=f"Shure {self.coordinator.config_entry.data['model']}",
+            manufacturer="Shure",
+            model=self.coordinator.config_entry.data["model"],
+            sw_version=self.coordinator.data.firmware_version
+            if self.coordinator.data
+            else None,
+        )
+
+    async def async_press(self) -> None:
+        """Handle the button press - force immediate data refresh."""
+        await self.coordinator.async_request_refresh()
 
 
 class SlxdIdentifyChannelButton(

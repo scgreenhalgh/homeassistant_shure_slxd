@@ -41,7 +41,8 @@
       "transmitter_connected": { "name": "Transmitter Connected" }
     },
     "button": {
-      "identify": { "name": "Identify" }
+      "identify": { "name": "Identify" },
+      "refresh": { "name": "Refresh" }
     },
     "number": {
       "audio_gain": { "name": "Audio Gain" }
