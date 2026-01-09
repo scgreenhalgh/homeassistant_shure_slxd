@@ -241,6 +241,24 @@ class TestParseResponse:
         assert result.antenna == 2
         assert result.raw_value == 64
 
+    def test_parse_rep_rssi_combined_format(self) -> None:
+        """Test parsing RSSI response in combined format (no antenna separation).
+
+        Some SLX-D devices return a single combined RSSI value instead of
+        separate values for each antenna.
+        """
+        # Arrange
+        response = "< REP 2 RSSI 068 >"
+
+        # Act
+        result = parse_response(response)
+
+        # Assert
+        assert result.property_name == "RSSI"
+        assert result.channel == 2
+        assert result.raw_value == 68
+        assert result.antenna is None  # Combined format has no antenna
+
     def test_parse_rep_tx_model(self) -> None:
         """Test parsing TX_MODEL response."""
         # Arrange
