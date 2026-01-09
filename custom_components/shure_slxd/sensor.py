@@ -129,6 +129,17 @@ CHANNEL_SENSORS: tuple[SlxdChannelSensorEntityDescription, ...] = (
         ),
     ),
     SlxdChannelSensorEntityDescription(
+        key="battery_percentage",
+        translation_key="battery_percentage",
+        name="Battery",
+        native_unit_of_measurement="%",
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda channel: (
+            channel.transmitter.battery_percentage if channel.transmitter else None
+        ),
+    ),
+    SlxdChannelSensorEntityDescription(
         key="battery_minutes",
         translation_key="battery_minutes",
         name="Battery Time",
