@@ -5,8 +5,12 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 
-def create_mock_slxd_client() -> MagicMock:
-    """Create a fully-mocked SlxdClient with all methods."""
+def create_mock_slxd_client(channel_1_gain: int = 12) -> MagicMock:
+    """Create a fully-mocked SlxdClient with all methods.
+
+    Args:
+        channel_1_gain: The gain value to return for channel 1 (default 12 dB).
+    """
     mock_client = MagicMock()
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
@@ -17,7 +21,7 @@ def create_mock_slxd_client() -> MagicMock:
     mock_client.get_rf_band = AsyncMock(return_value="G55")
     mock_client.get_lock_status = AsyncMock(return_value="ALL")
     # Channel-level getters
-    mock_client.get_audio_gain = AsyncMock(return_value=12)
+    mock_client.get_audio_gain = AsyncMock(return_value=channel_1_gain)
     mock_client.get_frequency = AsyncMock(return_value=578350)
     mock_client.get_channel_name = AsyncMock(return_value="Lead Vox")
     mock_client.get_group_channel = AsyncMock(return_value="1,1")

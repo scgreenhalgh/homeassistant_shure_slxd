@@ -88,7 +88,7 @@ async def test_identify_device_button_press(
     with patch(
         "custom_components.shure_slxd.coordinator.SlxdClient"
     ) as mock_coordinator_client_class, patch(
-        "pyslxd.client.SlxdClient"
+        "custom_components.shure_slxd.button.SlxdClient"
     ) as mock_button_client_class:
         # Mock for coordinator
         mock_coordinator_client = create_mock_slxd_client()
@@ -122,7 +122,7 @@ async def test_identify_channel_button_press(
     with patch(
         "custom_components.shure_slxd.coordinator.SlxdClient"
     ) as mock_coordinator_client_class, patch(
-        "pyslxd.client.SlxdClient"
+        "custom_components.shure_slxd.button.SlxdClient"
     ) as mock_button_client_class:
         # Mock for coordinator
         mock_coordinator_client = create_mock_slxd_client()
@@ -190,3 +190,183 @@ async def test_identify_channel_button_unique_id(
         )
         assert entity is not None
         assert entity.unique_id == "SLXD4D01_channel_1_identify"
+
+
+async def test_gain_up_button_created(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that gain up button is created for each channel."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_client_class:
+        mock_client = create_mock_slxd_client()
+        mock_client_class.return_value = mock_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_registry = er.async_get(hass)
+        entity = entity_registry.async_get(
+            "button.shure_slxd4d_channel_1_gain_up"
+        )
+        assert entity is not None
+
+
+async def test_gain_down_button_created(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that gain down button is created for each channel."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_client_class:
+        mock_client = create_mock_slxd_client()
+        mock_client_class.return_value = mock_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_registry = er.async_get(hass)
+        entity = entity_registry.async_get(
+            "button.shure_slxd4d_channel_1_gain_down"
+        )
+        assert entity is not None
+
+
+async def test_gain_up_button_press_increases_gain(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that gain up button increases gain by 1 dB."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_coordinator_client_class, patch(
+        "custom_components.shure_slxd.button.SlxdClient"
+    ) as mock_button_client_class:
+        # Mock for coordinator - channel 1 has gain of 10 dB
+        mock_coordinator_client = create_mock_slxd_client(channel_1_gain=10)
+        mock_coordinator_client_class.return_value = mock_coordinator_client
+
+        # Mock for button entity
+        mock_button_client = create_mock_slxd_client()
+        mock_button_client_class.return_value = mock_button_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Press the gain up button
+        await hass.services.async_call(
+            "button",
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.shure_slxd4d_channel_1_gain_up"},
+            blocking=True,
+        )
+
+        # Verify set_audio_gain was called with gain + 1
+        mock_button_client.set_audio_gain.assert_called_with(1, 11)
+
+
+async def test_gain_down_button_press_decreases_gain(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that gain down button decreases gain by 1 dB."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_coordinator_client_class, patch(
+        "custom_components.shure_slxd.button.SlxdClient"
+    ) as mock_button_client_class:
+        # Mock for coordinator - channel 1 has gain of 10 dB
+        mock_coordinator_client = create_mock_slxd_client(channel_1_gain=10)
+        mock_coordinator_client_class.return_value = mock_coordinator_client
+
+        # Mock for button entity
+        mock_button_client = create_mock_slxd_client()
+        mock_button_client_class.return_value = mock_button_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Press the gain down button
+        await hass.services.async_call(
+            "button",
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.shure_slxd4d_channel_1_gain_down"},
+            blocking=True,
+        )
+
+        # Verify set_audio_gain was called with gain - 1
+        mock_button_client.set_audio_gain.assert_called_with(1, 9)
+
+
+async def test_gain_up_button_clamps_at_max(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that gain up button clamps at maximum (42 dB)."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_coordinator_client_class, patch(
+        "custom_components.shure_slxd.button.SlxdClient"
+    ) as mock_button_client_class:
+        # Mock for coordinator - channel 1 already at max gain
+        mock_coordinator_client = create_mock_slxd_client(channel_1_gain=42)
+        mock_coordinator_client_class.return_value = mock_coordinator_client
+
+        # Mock for button entity
+        mock_button_client = create_mock_slxd_client()
+        mock_button_client_class.return_value = mock_button_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Press the gain up button
+        await hass.services.async_call(
+            "button",
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.shure_slxd4d_channel_1_gain_up"},
+            blocking=True,
+        )
+
+        # Should still set to 42 (clamped)
+        mock_button_client.set_audio_gain.assert_called_with(1, 42)
+
+
+async def test_gain_down_button_clamps_at_min(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that gain down button clamps at minimum (-18 dB)."""
+    with patch(
+        "custom_components.shure_slxd.coordinator.SlxdClient"
+    ) as mock_coordinator_client_class, patch(
+        "custom_components.shure_slxd.button.SlxdClient"
+    ) as mock_button_client_class:
+        # Mock for coordinator - channel 1 already at min gain
+        mock_coordinator_client = create_mock_slxd_client(channel_1_gain=-18)
+        mock_coordinator_client_class.return_value = mock_coordinator_client
+
+        # Mock for button entity
+        mock_button_client = create_mock_slxd_client()
+        mock_button_client_class.return_value = mock_button_client
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Press the gain down button
+        await hass.services.async_call(
+            "button",
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.shure_slxd4d_channel_1_gain_down"},
+            blocking=True,
+        )
+
+        # Should still set to -18 (clamped)
+        mock_button_client.set_audio_gain.assert_called_with(1, -18)
