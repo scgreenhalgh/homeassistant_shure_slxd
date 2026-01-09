@@ -190,7 +190,7 @@ If detection fails, check that the model is reporting correctly.
 
 ## Development
 
-This project follows **strict Test-Driven Development (TDD)**. See [CLAUDE.md](CLAUDE.md) for development guidelines.
+This project follows **strict Test-Driven Development (TDD)**.
 
 ### Project Structure
 
@@ -218,7 +218,7 @@ homeassistant_shure_slxd/
 │   ├── strings.json                 # Translations
 │   └── const.py                     # Constants
 │
-├── tests/                           # Integration tests (48 tests)
+├── tests/                           # Integration tests (54 tests)
 │
 └── scripts/                         # Docker test environment & E2E tests
 ```
@@ -253,5 +253,5 @@ Contributions are welcome! Please:
 
 1. Follow TDD methodology (write tests first)
 2. Ensure all tests pass
-3. Follow the code style in CLAUDE.md
+3. Follow existing code style and patterns
 4. Submit a pull request with a clear description
