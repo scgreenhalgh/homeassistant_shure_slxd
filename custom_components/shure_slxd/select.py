@@ -85,7 +85,7 @@ class SlxdAudioOutputLevelSelect(
 
     async def async_select_option(self, option: str) -> None:
         """Set the audio output level."""
-        from pyslxd.client import SlxdClient
+        from .pyslxd.client import SlxdClient
 
         host = self.coordinator.config_entry.data["host"]
         port = self.coordinator.config_entry.data.get("port", 2202)

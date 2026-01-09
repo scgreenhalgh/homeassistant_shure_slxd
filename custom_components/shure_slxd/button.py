@@ -9,7 +9,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from pyslxd.client import SlxdClient
+from .pyslxd.client import SlxdClient
 
 from .const import DOMAIN, GAIN_STEP_DB, GAIN_MIN_DB, GAIN_MAX_DB
 from .coordinator import SlxdDataUpdateCoordinator

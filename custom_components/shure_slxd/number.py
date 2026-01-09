@@ -9,7 +9,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from pyslxd.client import AUDIO_GAIN_MAX_DB, AUDIO_GAIN_MIN_DB
+from .pyslxd.client import AUDIO_GAIN_MAX_DB, AUDIO_GAIN_MIN_DB
 
 from .const import DOMAIN
 from .coordinator import SlxdDataUpdateCoordinator
@@ -85,7 +85,7 @@ class SlxdAudioGainNumber(CoordinatorEntity[SlxdDataUpdateCoordinator], NumberEn
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the audio gain value."""
-        from pyslxd.client import SlxdClient
+        from .pyslxd.client import SlxdClient
 
         host = self.coordinator.config_entry.data["host"]
         port = self.coordinator.config_entry.data.get("port", 2202)

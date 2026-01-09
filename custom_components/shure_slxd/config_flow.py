@@ -13,8 +13,8 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
-from pyslxd.client import SlxdClient
-from pyslxd.exceptions import SlxdConnectionError
+from .pyslxd.client import SlxdClient
+from .pyslxd.exceptions import SlxdConnectionError
 
 from .const import DEFAULT_PORT, DOMAIN
 

@@ -11,9 +11,9 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from pyslxd.client import SlxdClient
-from pyslxd.exceptions import SlxdConnectionError, SlxdTimeoutError
-from pyslxd.models import (
+from .pyslxd.client import SlxdClient
+from .pyslxd.exceptions import SlxdConnectionError, SlxdTimeoutError
+from .pyslxd.models import (
     AudioOutputLevel,
     LockStatus,
     SlxdChannel,
