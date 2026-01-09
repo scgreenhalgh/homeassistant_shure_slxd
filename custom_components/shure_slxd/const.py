@@ -2,7 +2,7 @@
 
 DOMAIN = "shure_slxd"
 DEFAULT_PORT = 2202
-DEFAULT_SCAN_INTERVAL = 30  # seconds
+DEFAULT_SCAN_INTERVAL = 10  # seconds
 METERING_INTERVAL = 1000  # ms for audio levels
 
 # Audio gain settings
