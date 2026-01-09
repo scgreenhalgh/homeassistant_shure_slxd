@@ -413,6 +413,10 @@ class SlxdClient:
     async def get_rssi(self, channel: int, antenna: int) -> int:
         """Get RSSI for channel and antenna in dBm.
 
+        SLX-D devices may respond to GET RSSI in two formats:
+        1. Per-antenna: TWO separate REP messages (< REP x RSSI 1 value > and < REP x RSSI 2 value >)
+        2. Combined: ONE REP message with combined value (< REP x RSSI value >)
+
         Args:
             channel: Channel number (1-4)
             antenna: Antenna number (1 or 2)
@@ -426,12 +430,59 @@ class SlxdClient:
         self._validate_channel(channel)
         if antenna not in (1, 2):
             raise ValueError(f"Antenna must be 1 or 2, got {antenna}")
-        command = build_command(
-            CommandType.GET, "RSSI", channel=channel, value=str(antenna)
-        )
+
+        # GET RSSI - command format: < GET x RSSI > (no antenna parameter)
+        command = build_command(CommandType.GET, "RSSI", channel=channel)
         response = await self.send_command(command)
+
+        # Check if we got a valid RSSI response
+        if response.property_name != "RSSI":
+            # Device returned an error or unexpected response
+            return -120
+
         raw_value = response.raw_value if response.raw_value is not None else 0
+
+        # If antenna is specified in response, we may need to read a second response
+        # for the other antenna. But most devices return combined RSSI (antenna=None).
+        if response.antenna is not None and response.antenna != antenna:
+            # Got response for wrong antenna, try to read the next one
+            try:
+                response2 = await self._read_next_response(timeout=2.0)
+                if response2.antenna == antenna:
+                    raw_value = response2.raw_value if response2.raw_value is not None else 0
+            except Exception:
+                # No second response, return -120 for requested antenna
+                return -120
+
         return convert_rssi(raw_value)
+
+    async def _read_next_response(self, timeout: float = DEFAULT_COMMAND_TIMEOUT) -> ParsedResponse:
+        """Read the next response from the device without sending a command.
+
+        Args:
+            timeout: Response timeout in seconds
+
+        Returns:
+            Parsed response from device
+
+        Raises:
+            SlxdConnectionError: If not connected
+            SlxdTimeoutError: If response times out
+        """
+        if not self._connected or self._reader is None:
+            raise SlxdConnectionError("Not connected")
+
+        try:
+            response_bytes = await asyncio.wait_for(
+                self._reader.readuntil(b">"), timeout=timeout
+            )
+        except asyncio.TimeoutError as err:
+            raise SlxdTimeoutError(f"Response timed out after {timeout}s") from err
+        except asyncio.IncompleteReadError as err:
+            raise SlxdConnectionError("Connection closed unexpectedly") from err
+
+        response = response_bytes.decode().strip()
+        return parse_response(response)
 
     async def get_tx_model(self, channel: int) -> str:
         """Get transmitter model for channel.

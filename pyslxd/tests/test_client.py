@@ -682,11 +682,14 @@ class TestClientChannelInfo:
             assert level == -30
 
     @pytest.mark.asyncio
-    async def test_get_rssi_antenna_1(self) -> None:
-        """Test getting RSSI for antenna 1 in dBm."""
+    async def test_get_rssi_combined_format(self) -> None:
+        """Test getting RSSI with combined format (no antenna separation).
+
+        Most SLX-D devices return a single combined RSSI value.
+        """
         mock_reader = AsyncMock()
         mock_reader.readuntil = AsyncMock(
-            return_value=b"< REP 1 RSSI 1 083 >\r\n"
+            return_value=b"< REP 1 RSSI 083 >\r\n"
         )
         mock_writer = MagicMock()
         mock_writer.write = MagicMock()
@@ -704,14 +707,18 @@ class TestClientChannelInfo:
             # Raw 83, offset 120 = -37 dBm
             rssi = await client.get_rssi(1, antenna=1)
             assert rssi == -37
-            mock_writer.write.assert_called_with(b"< GET 1 RSSI 1 >\r\n")
+            # New format: no antenna parameter in GET command
+            mock_writer.write.assert_called_with(b"< GET 1 RSSI >\r\n")
 
     @pytest.mark.asyncio
-    async def test_get_rssi_antenna_2(self) -> None:
-        """Test getting RSSI for antenna 2 in dBm."""
+    async def test_get_rssi_per_antenna_format(self) -> None:
+        """Test getting RSSI with per-antenna format (two responses).
+
+        Some devices may return separate RSSI values for each antenna.
+        """
         mock_reader = AsyncMock()
         mock_reader.readuntil = AsyncMock(
-            return_value=b"< REP 1 RSSI 2 064 >\r\n"
+            return_value=b"< REP 1 RSSI 1 083 >\r\n"
         )
         mock_writer = MagicMock()
         mock_writer.write = MagicMock()
@@ -726,9 +733,9 @@ class TestClientChannelInfo:
             client = SlxdClient()
             await client.connect("192.168.1.100")
 
-            # Raw 64, offset 120 = -56 dBm
-            rssi = await client.get_rssi(1, antenna=2)
-            assert rssi == -56
+            # Raw 83, offset 120 = -37 dBm (antenna 1 matches requested)
+            rssi = await client.get_rssi(1, antenna=1)
+            assert rssi == -37
 
 
 class TestClientTransmitterInfo:

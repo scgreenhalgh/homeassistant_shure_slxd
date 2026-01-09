@@ -200,17 +200,32 @@ def _parse_rep_response(
     Returns:
         ParsedResponse with property data
     """
-    # Handle RSSI which has antenna number
-    rssi_match = re.match(r"RSSI\s+(\d+)\s+(\d+)", remaining)
-    if rssi_match:
-        antenna = int(rssi_match.group(1))
-        raw_value = int(rssi_match.group(2))
+    # Handle RSSI - two formats:
+    # Format 1 (per-antenna): < REP x RSSI antenna value > e.g., < REP 2 RSSI 1 083 >
+    # Format 2 (combined): < REP x RSSI value > e.g., < REP 2 RSSI 068 >
+    rssi_match_with_antenna = re.match(r"RSSI\s+(\d+)\s+(\d+)", remaining)
+    rssi_match_combined = re.match(r"RSSI\s+(\d+)$", remaining)
+
+    if rssi_match_with_antenna:
+        # Format 1: Per-antenna RSSI
+        antenna = int(rssi_match_with_antenna.group(1))
+        raw_value = int(rssi_match_with_antenna.group(2))
         return ParsedResponse(
             command_type=command_type,
             property_name="RSSI",
             channel=channel,
             raw_value=raw_value,
             antenna=antenna,
+        )
+    elif rssi_match_combined:
+        # Format 2: Combined RSSI (no antenna separation)
+        raw_value = int(rssi_match_combined.group(1))
+        return ParsedResponse(
+            command_type=command_type,
+            property_name="RSSI",
+            channel=channel,
+            raw_value=raw_value,
+            antenna=None,  # Combined value, not per-antenna
         )
 
     # Handle braced values (strings with padding)
